@@ -14,21 +14,31 @@ from PIL import Image
 import base64
 from io import BytesIO
 
-from flask import Flask
-from flask_pymongo import PyMongo
+from flask import Flask, render_template
+
 
 app = Flask(__name__)
+app.secret_key = 'clave_super_secreta'
 
-# Clave secreta de Flask
-app.secret_key = os.environ.get("SECRET_KEY", "clave_por_defecto")
+# Usar variable de entorno o valor por defecto
+MONGO_URI = os.environ.get("MONGO_URI") or "mongodb+srv://211153_db_user:712LiSa*@cluster0.d2nfxah.mongodb.net/clinica_db?retryWrites=true&w=majority"
+app.config["MONGO_URI"] = MONGO_URI
 
-# Conexión a MongoDB Atlas usando variable de entorno
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+try:
+    mongo = PyMongo(app)
+    mongo.db.list_collection_names()  # prueba de conexión
+    print("Conexión a MongoDB OK")
+except Exception as e:
+    mongo = None
+    print("Error conectando a MongoDB:", e)
+
+# Luego, en tus rutas, agregar verificación
+def db():
+    if mongo is None:
+        raise Exception("No hay conexión a la base de datos")
+    return mongo.db
+
 mongo = PyMongo(app)
-
-
-# Conexión a MongoDB local (asegúrate que MongoDB esté corriendo)
-#app.config["MONGO_URI"] = "mongodb+srv://211153_db_user:712LiSa*@cluster0.d2nfxah.mongodb.net/clinica_db?retryWrites=true&w=majority"
 
 # Crear carpeta uploads si no existe
 os.makedirs("static/uploads", exist_ok=True)
@@ -60,7 +70,7 @@ def register():
         password = request.form['password']
         rol = request.form['rol']
 
-        existente = mongo.db.usuarios.find_one({"username": usuario})
+        existente = db().usuarios.find_one({"username": usuario})
         if existente:
             error = "El usuario ya existe"
         else:
@@ -297,4 +307,4 @@ def guardar_resultado():
 
 # Ejecutar app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
