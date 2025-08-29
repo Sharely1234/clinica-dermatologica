@@ -1,0 +1,9 @@
+# Ignorar entorno virtual
+venv/
+__pycache__/
+*.pyc
+
+# Ignorar archivos grandes no importantes
+*.zip
+*.dll
+*.log

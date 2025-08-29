@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Detección en Tiempo Real - Cámara</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon1.png') }}">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffffff 0%, #e0f7ff 25%, #b3e6ff 50%, #87d6cc 75%, #5ec4b2 100%);
+      background-size: 400% 400%;
+      animation: gradientBackground 15s ease infinite;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    @keyframes gradientBackground {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, #2a7cc7, #5ec4b2) !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: white !important;
+    }
+
+    .btn-light {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 8px;
+      color: #2a7cc7;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .btn-light:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn-outline-light {
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .btn-outline-light:hover {
+      background: white;
+      color: #2a7cc7;
+      transform: translateY(-2px);
+      border-color: white;
+    }
+
+    .container-camara {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 50px 20px;
+    }
+
+    .card-camara {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,105,148,0.2);
+      padding: 30px;
+      max-width: 700px;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+    .card-camara:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,105,148,0.25);
+    }
+
+    .card-camara h3 {
+      color: #2a7cc7;
+      font-weight: 600;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #2a7cc7;
+    }
+    .form-control, .form-select {
+      border-radius: 10px;
+      border: 1px solid #cce4f1;
+      padding: 8px 12px;
+      transition: all 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus {
+      box-shadow: 0 0 8px rgba(46,196,178,0.5);
+      border-color: #2a7cc7;
+    }
+
+    video {
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-camara {
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 10px 20px;
+      transition: all 0.3s ease;
+    }
+    .btn-success { background: linear-gradient(135deg, #2a7cc7, #5ec4b2); border: none; color: white; }
+    .btn-success:hover { background: linear-gradient(135deg, #5ec4b2, #2a7cc7); transform: translateY(-2px); }
+    .btn-danger { background: linear-gradient(135deg, #e04b4b, #ff6b6b); border: none; color: white; }
+    .btn-danger:hover { background: linear-gradient(135deg, #ff6b6b, #e04b4b); transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, #2a7cc7, #5ec4b2); border: none; color: white; }
+    .btn-primary:hover { background: linear-gradient(135deg, #5ec4b2, #2a7cc7); transform: translateY(-2px); }
+
+    #resultado {
+      border-radius: 12px;
+      padding: 15px;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .left-image {
+        position: absolute;
+        bottom: 0;
+        left: 850px;
+        height: 100vh; /* un poco más pequeño que en register */
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .container-camara {
+      display: flex;
+      justify-content: flex-start; /* card a la izquierda */
+      align-items: flex-start;
+      gap: 30px;
+      padding: 50px 20px;
+      position: relative;
+    }
+
+    /* Card */
+    .card-camara {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 105, 148, 0.2);
+      max-width: 700px;
+      width: 100%;
+    }
+
+    /* Imagen a la derecha */
+    .imagen-derecha img {
+      max-height: 500px;
+      display: block;
+    }
+
+    /* Mensaje de guardado verde */
+    #resultado.guardado {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 128, 0, 0.3);
+      border: 1px solid #3e8e41;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+
+    @media (max-width: 768px) {
+      .card-camara { padding: 20px; }
+      video { width: 100%; height: auto; }
+      .d-flex.justify-content-center { flex-direction: column; gap: 10px; align-items: stretch; }
+    }
+  </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="static/icon1.png" alt="Logo" width="40" height="40" class="me-2">
+        Clínica Dermatológica
+    </a>
+    <div class="d-flex">
+        <a href="/dashboard" class="btn btn-light me-2">
+          <i class="fas fa-chart-line me-1"></i>Panel
+        </a>
+        <a href="/logout" class="btn btn-outline-light">
+          <i class="fas fa-sign-out-alt me-1"></i>Cerrar sesión
+        </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container-camara position-relative">
+  <!-- Card a la izquierda -->
+  <div class="card-camara p-4 me-auto">
+    <h3>📷 Cámara en Vivo - Detección de Cáncer de Piel</h3>
+
+    <!-- Datos del paciente -->
+    <form class="row g-3">
+      <div class="col-md-6">
+        <label for="nombre_paciente" class="form-label">Nombre del Paciente</label>
+        <input id="nombre_paciente" type="text" class="form-control" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="col-md-6">
+        <label for="modelo" class="form-label">Selecciona el Modelo</label>
+        <select id="modelo" class="form-select">
+          {% for key, meta in modelos.items() %}
+            <option value="{{ key }}">{{ meta['nombre'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    <!-- Video -->
+    <div class="text-center mt-4">
+      <video id="video" width="100%" class="rounded shadow" autoplay playsinline></video>
+      <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <!-- Botones -->
+    <div class="d-flex justify-content-start gap-3 mt-4 flex-wrap">
+      <button id="startBtn" class="btn btn-success btn-camara">▶️ Iniciar Detección</button>
+      <button id="stopBtn" class="btn btn-danger btn-camara" disabled>⏹️ Detener</button>
+      <button id="saveBtn" class="btn btn-primary btn-camara" disabled>💾 Guardar Resultado</button>
+    </div>
+
+    <!-- Resultado -->
+    <div class="alert alert-secondary text-center mt-4" id="resultado">
+      Esperando...
+    </div>
+  </div>
+
+  <!-- Imagen decorativa a la derecha, fuera del card -->
+  <img src="{{ url_for('static', filename='img/MujerA.png') }}" alt="Decoración" class="left-image">  
+</div>
+
+
+
+<script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const resultado = document.getElementById('resultado');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const modeloSelect = document.getElementById('modelo');
+  const nombrePacienteInput = document.getElementById('nombre_paciente');
+
+  let stream = null;
+  let intervalId = null;
+  let ultimoFrameData = null;
+  let ultimoResultado = null;
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }});
+      video.srcObject = stream;
+      await video.play();
+    } catch (err) {
+      alert('No se pudo acceder a la cámara: ' + err);
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+
+  async function captureAndSend() {
+    if (!video || video.readyState < 2) return;
+    const w = 300, h = 300;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    ultimoFrameData = dataUrl;
+
+    const payload = {
+      imagen: dataUrl,
+      modelo: modeloSelect.value,
+      nombre_paciente: nombrePacienteInput.value || "PacienteCam"
+    };
+
+    try {
+      const res = await fetch('/detectar_frame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.resultado) {
+        ultimoResultado = data;
+        resultado.className = "alert alert-success text-center mt-4";
+        resultado.innerText = `🔍 ${data.resultado} — ${data.probabilidad}%`;
+        saveBtn.disabled = false;
+      } else if (data.error) {
+        resultado.className = "alert alert-danger text-center mt-4";
+        resultado.innerText = 'Error: ' + data.error;
+      }
+    } catch (e) {
+      resultado.className = "alert alert-danger text-center mt-4";
+      resultado.innerText = 'Error comunicando con el servidor';
+    }
+  }
+
+  startBtn.addEventListener('click', async () => {
+    await startCamera();
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    intervalId = setInterval(captureAndSend, 2000);
+  });
+
+  stopBtn.addEventListener('click', () => {
+    clearInterval(intervalId);
+    intervalId = null;
+    stopCamera();
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    saveBtn.disabled = true;
+    resultado.className = "alert alert-secondary text-center mt-4";
+    resultado.innerText = "Detenido.";
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    if (!ultimoResultado || !ultimoFrameData) return;
+    const payload = {
+      imagen: ultimoFrameData,
+      paciente: nombrePacienteInput.value || "PacienteCam",
+      modelo: modeloSelect.value,
+      resultado: ultimoResultado.resultado,
+      probabilidad: ultimoResultado.probabilidad
+    };
+    try {
+      const res = await fetch('/guardar_resultado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json();
+      if (j.ok) {
+        resultado.className = "alert guardado text-center mt-4";
+        resultado.innerHTML = "✅ Resultado guardado en historial.";
+        saveBtn.disabled = true;
+        setTimeout(() => {
+          resultado.className = "alert alert-secondary text-center mt-4";
+          resultado.innerText = "Esperando...";
+        }, 3000);
+      } else {
+        alert('⚠️ Error guardando: ' + JSON.stringify(j));
+      }
+    } catch (e) {
+      alert('❌ Error guardando resultado');
+    }
+  });
+
+</script>
+</body>
+</html>
