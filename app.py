@@ -21,7 +21,7 @@ app = Flask(__name__)
 app.secret_key = 'clave_super_secreta'
 
 # Usar variable de entorno o valor por defecto
-MONGO_URI = os.environ.get("MONGO_URI") or "mongodb+srv://211153_db_user:712LiSa*@cluster0.d2nfxah.mongodb.net/clinica_db?retryWrites=true&w=majority"
+MONGO_URI = os.environ.get("MONGO_URI") or "mongodb+srv://211153_db_user:712LiSa0@cluster0.d2nfxah.mongodb.net/clinica_db?retryWrites=true&w=majority"
 app.config["MONGO_URI"] = MONGO_URI
 
 try:
