@@ -45,10 +45,10 @@ os.makedirs("static/uploads", exist_ok=True)
 
 # Diccionario de modelos disponibles (carga al iniciar)
 MODELOS = {
-    "vgg16": {
-        "nombre": "VGG16",
-        "modelo": load_model("Modelos/modelo_vgg16_cancer_piel.h5"),
-        "clases": json.load(open("DatosIA/clases_skin_labels.json"))
+    "cnn": {
+        "nombre": "CNN",
+        "modelo": load_model("Modelos/modelo_entrenadoJM2.h5"),
+        "clases": json.load(open("DatosIA/clases_cancer2.json"))
     },
     "cnn": {
         "nombre": "CNN Personalizado",
