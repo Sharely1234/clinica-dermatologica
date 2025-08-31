@@ -1,7 +1,8 @@
-Flask==2.3.2
-Flask-PyMongo
+Flask
+flask-pymongo
+tensorflow==2.13.0
 pillow
 numpy
-tensorflow
 werkzeug
-gunicorn==21.2.0
+gunicorn
+bson
